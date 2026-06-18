@@ -1,34 +1,1837 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-    <meta charset="UTF-8">
-    <title>ระบบงานผู้รับเหมา</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
+
+<title>
+ระบบติดตามงานผู้รับเหมา V2.0
+</title>
+
+
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+
+<link
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+rel="stylesheet">
+
+
+<style>
+
+body{
+    background:#f3f5f7;
+    font-family:
+    "Segoe UI",Tahoma,sans-serif;
+}
+
+
+.navbar-brand{
+    font-weight:bold;
+}
+
+
+.card{
+    border:none;
+    border-radius:15px;
+    box-shadow:
+    0 5px 15px rgba(0,0,0,0.08);
+}
+
+
+.status-card{
+    text-align:center;
+    padding:15px;
+}
+
+
+.status-number{
+    font-size:28px;
+    font-weight:bold;
+}
+
+
+.job-item{
+    cursor:pointer;
+    transition:0.2s;
+}
+
+
+.job-item:hover{
+    background:#f0f8ff;
+}
+
+
+.preview-img{
+    max-height:120px;
+    max-width:100%;
+    object-fit:contain;
+}
+
+
+.upload-box{
+
+    border:
+    2px dashed #999;
+
+    border-radius:10px;
+
+    height:140px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    background:#fff;
+
+}
+
+
+.loading{
+    text-align:center;
+    padding:40px;
+}
+
+
+</style>
+
 </head>
-<body class="p-4">
-    <h3>รายการงานในระบบ</h3>
-    <div id="app" class="mt-3">กำลังโหลดข้อมูล...</div>
 
-    <script>
-        // ใส่ URL Web App อันใหม่ที่ได้จากการ Deploy ล่าสุด (ต้องเป็นอันที่เพิ่งกด New Version)
-        const API_URL = "https://script.google.com/macros/s/AKfycbx32DWQgjDRuxRyYRYQsAoNQfPW-DQ1yu7LmrcnXrUPtPRC2bvJ3goAP_a27avR8h7Pqw/exec"; 
 
-        async function init() {
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                
-                let html = '<table class="table table-bordered"><thead><tr><th>ผู้รับเหมา</th><th>งาน</th></tr></thead><tbody>';
-                data.forEach(item => {
-                    html += `<tr><td>${item.contractor}</td><td>${item.job}</td></tr>`;
-                });
-                html += '</tbody></table>';
-                document.getElementById('app').innerHTML = html;
-            } catch (err) {
-                document.getElementById('app').innerHTML = `<div class="alert alert-danger">เชื่อมต่อล้มเหลว: ${err.message}</div>`;
-            }
-        }
-        init();
-    </script>
+<body>
+
+
+<!-- Navbar -->
+
+<nav class="navbar navbar-dark bg-primary shadow">
+
+<div class="container">
+
+
+<span class="navbar-brand">
+
+<i class="fa-solid fa-helmet-safety"></i>
+
+ระบบติดตามงานผู้รับเหมา V2.0
+
+</span>
+
+
+<button 
+class="btn btn-light btn-sm"
+onclick="refreshData()">
+
+<i class="fa fa-rotate"></i>
+
+รีเฟรช
+
+</button>
+
+
+</div>
+
+</nav>
+
+
+
+<div class="container mt-4">
+
+
+<div class="row">
+
+
+<!-- ซ้าย -->
+
+<div class="col-lg-4">
+
+
+<div class="card p-3 mb-3">
+
+
+<label class="fw-bold">
+
+เลือกผู้รับเหมา
+
+</label>
+
+
+<select
+id="contractorSelect"
+class="form-select"
+onchange="showJobs()">
+
+
+<option value="">
+
+-- เลือกผู้รับเหมา --
+
+</option>
+
+
+<option>
+ราเชน อินต๊ะปัน
+</option>
+
+
+<option>
+สุมิตร รักษ์พนาขจี
+</option>
+
+
+<option>
+ทองสุข ก้องภพคีรี
+</option>
+
+
+<option>
+นิทัศน์ เกียรติชฎาธาร
+</option>
+
+
+<option>
+ทองสุข แก้วดอกรัก
+</option>
+
+
+</select>
+
+
+</div>
+
+
+
+<div class="card p-3 mb-3">
+
+
+<h6>
+สรุปสถานะงาน
+</h6>
+
+
+<div class="row">
+
+
+<div class="col-6">
+
+<div class="status-card">
+
+<div 
+id="totalCount"
+class="status-number">
+
+0
+
+</div>
+
+ทั้งหมด
+
+</div>
+
+</div>
+
+
+
+<div class="col-6">
+
+<div class="status-card">
+
+<div
+id="doneCount"
+class="status-number text-success">
+
+0
+
+</div>
+
+เสร็จแล้ว
+
+</div>
+
+</div>
+
+
+<div class="col-6">
+
+<div class="status-card">
+
+
+<div
+id="waitCount"
+class="status-number text-warning">
+
+0
+
+</div>
+
+
+รอดำเนินการ
+
+
+</div>
+
+
+</div>
+
+
+
+<div class="col-6">
+
+
+<div class="status-card">
+
+
+<div
+id="partCount"
+class="status-number text-info">
+
+0
+
+</div>
+
+
+บางส่วน
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+<div class="d-grid gap-2">
+
+
+<button 
+class="btn btn-success btn-lg"
+onclick="openCreateModal()">
+
+
+<i class="fa fa-plus"></i>
+
+สร้างงานใหม่
+
+
+</button>
+
+
+
+<button 
+class="btn btn-secondary"
+onclick="openReportModal()">
+
+
+<i class="fa fa-file-pdf"></i>
+
+รายงาน PDF
+
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- ขวา -->
+
+
+<div class="col-lg-8">
+
+
+<div class="card p-3">
+
+
+<h5>
+
+รายการงาน
+
+</h5>
+
+
+<div 
+id="jobContainer">
+
+
+<div class="loading">
+
+
+กรุณาเลือกผู้รับเหมา
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+<!-- ===========================
+     Modal จะอยู่ตอนที่ 2
+=========================== -->
+
+
+<script>
+
+
+/*****************************************
+ตัวแปรหลัก
+******************************************/
+
+let jobs = [];
+
+let currentRow = null;
+
+
+let beforeImage = "";
+
+let afterImage = "";
+
+
+
+
+/*****************************************
+โหลดระบบ
+******************************************/
+
+
+window.onload = function(){
+
+    refreshData();
+
+};
+
+
+
+
+/*****************************************
+ดึงข้อมูลจาก Apps Script
+******************************************/
+
+
+function refreshData(){
+
+
+document.getElementById(
+"jobContainer"
+).innerHTML =
+"<div class='loading'>กำลังโหลดข้อมูล...</div>";
+
+
+
+google.script.run
+
+.withSuccessHandler(function(data){
+
+
+jobs = data;
+
+
+showJobs();
+
+
+})
+
+
+.withFailureHandler(function(err){
+
+alert(
+"โหลดข้อมูลไม่สำเร็จ\n"
++
+err.message
+);
+
+})
+
+
+.getJobs();
+
+
+}
+
+<!-- =================================================
+     Modal : สร้างงานใหม่
+================================================== -->
+
+<div class="modal fade"
+     id="createModal"
+     tabindex="-1">
+
+<div class="modal-dialog">
+
+<div class="modal-content">
+
+
+<div class="modal-header bg-success text-white">
+
+
+<h5>
+<i class="fa fa-plus-circle"></i>
+สร้างงานใหม่
+</h5>
+
+
+<button 
+class="btn-close btn-close-white"
+data-bs-dismiss="modal">
+</button>
+
+
+</div>
+
+
+<div class="modal-body">
+
+
+<label class="fw-bold">
+ประเภทงาน
+</label>
+
+
+<div class="btn-group w-100 mb-3">
+
+
+<input 
+type="radio"
+class="btn-check"
+name="jobType"
+id="mvType"
+checked>
+
+
+<label 
+class="btn btn-outline-primary"
+for="mvType">
+
+MV
+
+</label>
+
+
+<input 
+type="radio"
+class="btn-check"
+name="jobType"
+id="lvType">
+
+
+<label 
+class="btn btn-outline-primary"
+for="lvType">
+
+LV
+
+</label>
+
+
+</div>
+
+
+
+<label class="fw-bold">
+
+Feeder
+
+</label>
+
+
+<select
+id="feederInput"
+class="form-select mb-3">
+
+<option>
+CEA01
+</option>
+
+<option>
+CEA02
+</option>
+
+<option>
+CEA03
+</option>
+
+<option>
+CEA04
+</option>
+
+<option>
+CEA05
+</option>
+
+
+</select>
+
+
+
+<label class="fw-bold">
+
+สถานที่งาน
+
+</label>
+
+
+<input
+type="text"
+id="jobInput"
+class="form-control"
+placeholder="ระบุสถานที่">
+
+
+
+</div>
+
+
+<div class="modal-footer">
+
+
+<button 
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+ยกเลิก
+
+</button>
+
+
+<button 
+class="btn btn-success"
+onclick="saveJob()">
+
+บันทึก
+
+</button>
+
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+
+
+<!-- =================================================
+     Modal : รายละเอียดงาน
+================================================== -->
+
+
+<div class="modal fade"
+     id="detailModal"
+     tabindex="-1">
+
+
+<div class="modal-dialog modal-lg">
+
+
+<div class="modal-content">
+
+
+<div class="modal-header bg-primary text-white">
+
+
+<h5 id="jobTitle">
+
+รายละเอียดงาน
+
+</h5>
+
+
+<button 
+class="btn-close btn-close-white"
+data-bs-dismiss="modal">
+</button>
+
+
+</div>
+
+
+
+<div class="modal-body">
+
+
+<div class="alert alert-light">
+
+
+<b>ผู้รับเหมา:</b>
+<span id="viewContractor">
+</span>
+
+
+<br>
+
+
+<b>สถานที่:</b>
+
+<span id="viewJob">
+</span>
+
+
+</div>
+
+
+
+<h6>
+รูปภาพก่อนตัด
+</h6>
+
+
+<div 
+class="upload-box"
+onclick="beforeFile.click()">
+
+
+<div id="beforeBox">
+
+<i class="fa fa-camera fa-2x">
+</i>
+
+<br>
+
+เพิ่มรูป
+
+</div>
+
+
+</div>
+
+
+<input
+type="file"
+id="beforeFile"
+class="d-none"
+accept="image/*"
+onchange="readImage(this,'before')">
+
+
+
+
+<hr>
+
+
+
+<h6>
+รูปภาพหลังตัด
+</h6>
+
+
+<div 
+class="upload-box"
+onclick="afterFile.click()">
+
+
+<div id="afterBox">
+
+
+<i class="fa fa-camera fa-2x">
+</i>
+
+
+<br>
+
+
+เพิ่มรูป
+
+
+</div>
+
+
+</div>
+
+
+
+<input
+type="file"
+id="afterFile"
+class="d-none"
+accept="image/*"
+onchange="readImage(this,'after')">
+
+
+
+
+<hr>
+
+
+<div class="text-end">
+
+
+<button 
+class="btn btn-success"
+onclick="uploadPhoto()">
+
+
+<i class="fa fa-save"></i>
+
+
+บันทึกรูป
+
+
+</button>
+
+
+</div>
+
+
+
+
+<hr>
+
+
+<h6>
+รูปที่บันทึกแล้ว
+</h6>
+
+
+
+<div class="row">
+
+
+<div class="col-6 text-center">
+
+
+<p>ก่อนตัด</p>
+
+
+<img
+id="oldBefore"
+class="img-fluid rounded border">
+
+
+</div>
+
+
+
+<div class="col-6 text-center">
+
+
+<p>
+หลังตัด
+</p>
+
+
+<img
+id="oldAfter"
+class="img-fluid rounded border">
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+<div class="modal-footer">
+
+
+<button 
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+
+ปิด
+
+
+</button>
+
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+
+
+
+<!-- =================================================
+     Modal : รายงาน PDF
+================================================== -->
+
+
+<div class="modal fade"
+id="reportModal"
+tabindex="-1">
+
+
+<div class="modal-dialog">
+
+
+<div class="modal-content">
+
+
+<div class="modal-header bg-dark text-white">
+
+
+<h5>
+
+รายงาน PDF
+
+</h5>
+
+
+<button 
+class="btn-close btn-close-white"
+data-bs-dismiss="modal">
+</button>
+
+
+</div>
+
+
+
+<div class="modal-body">
+
+
+<label>
+เลือก Feeder
+</label>
+
+
+<select
+id="reportFeeder"
+class="form-select mb-3">
+
+
+<option value="ALL">
+
+ทั้งหมด
+
+</option>
+
+
+</select>
+
+
+
+<label>
+
+ค้นหาสถานที่
+
+</label>
+
+
+<input
+type="text"
+id="reportKeyword"
+class="form-control mb-3">
+
+
+<button 
+class="btn btn-primary w-100"
+onclick="printReport()">
+
+
+<i class="fa fa-print">
+</i>
+
+สร้างรายงาน PDF
+
+
+</button>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- Bootstrap JS -->
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+/*****************************************
+ แสดงรายการงาน
+******************************************/
+function showJobs(){
+
+ let contractor =
+ document.getElementById(
+ "contractorSelect"
+ ).value;
+
+
+ let container =
+ document.getElementById(
+ "jobContainer"
+ );
+
+
+ if(!contractor){
+
+  container.innerHTML =
+  "<div class='loading'>กรุณาเลือกผู้รับเหมา</div>";
+
+  return;
+ }
+
+
+ let list = jobs.filter(
+ item => item.contractor === contractor
+ );
+
+
+ updateSummary(list);
+
+
+ if(list.length === 0){
+
+  container.innerHTML =
+  `
+  <div class="alert alert-warning">
+  ไม่พบรายการงาน
+  </div>
+  `;
+
+  return;
+
+ }
+
+
+ let html = "";
+
+
+ list.forEach(item=>{
+
+
+ let status = "";
+
+
+ if(item.photo){
+
+  let p = item.photo.split("||");
+
+
+  if(p[0] && p[1]){
+
+   status =
+   `<span class="badge bg-success">
+   ส่งงานแล้ว
+   </span>`;
+
+  }else{
+
+   status =
+   `<span class="badge bg-info">
+   ทำบางส่วน
+   </span>`;
+
+  }
+
+ }else{
+
+  status =
+  `<span class="badge bg-warning text-dark">
+  รอดำเนินการ
+  </span>`;
+
+ }
+
+
+
+ html += `
+
+ <div 
+ class="card p-3 mb-2 job-item"
+ onclick="openDetail(${item.rowNum})">
+
+ <div class="d-flex justify-content-between">
+
+ <div>
+
+ <b>
+ ${item.type}
+ </b>
+
+ -
+ ${item.feeder}
+
+ <br>
+
+ ${item.job}
+
+ </div>
+
+
+ <div>
+
+ ${status}
+
+ </div>
+
+
+ </div>
+
+ </div>
+
+ `;
+
+
+ });
+
+
+ container.innerHTML = html;
+
+
+}
+
+
+
+/*****************************************
+ สรุปสถานะ
+******************************************/
+function updateSummary(list){
+
+
+ let done = 0;
+ let wait = 0;
+ let part = 0;
+
+
+ list.forEach(item=>{
+
+
+ if(!item.photo){
+
+  wait++;
+
+ }
+ else{
+
+  let p =
+  item.photo.split("||");
+
+
+  if(p[0] && p[1]){
+
+   done++;
+
+  }
+  else{
+
+   part++;
+
+  }
+
+ }
+
+
+ });
+
+
+ document.getElementById(
+ "totalCount"
+ ).innerText =
+ list.length;
+
+
+ document.getElementById(
+ "doneCount"
+ ).innerText =
+ done;
+
+
+ document.getElementById(
+ "waitCount"
+ ).innerText =
+ wait;
+
+
+ document.getElementById(
+ "partCount"
+ ).innerText =
+ part;
+
+
+}
+
+
+
+
+/*****************************************
+ เปิดรายละเอียดงาน
+******************************************/
+function openDetail(row){
+
+
+ currentRow = row;
+
+
+ let job =
+ jobs.find(
+ x => x.rowNum == row
+ );
+
+
+ document.getElementById(
+ "jobTitle"
+ ).innerText =
+ job.feeder;
+
+
+ document.getElementById(
+ "viewContractor"
+ ).innerText =
+ job.contractor;
+
+
+ document.getElementById(
+ "viewJob"
+ ).innerText =
+ job.job;
+
+
+ let before = "";
+ let after = "";
+
+
+ if(job.photo){
+
+ let p =
+ job.photo.split("||");
+
+
+ before = p[0] || "";
+ after = p[1] || "";
+
+ }
+
+
+ document.getElementById(
+ "oldBefore"
+ ).src =
+ before;
+
+
+ document.getElementById(
+ "oldAfter"
+ ).src =
+ after;
+
+
+ beforeImage = "";
+ afterImage = "";
+
+
+ document.getElementById(
+ "beforeBox"
+ ).innerHTML =
+ '<i class="fa fa-camera fa-2x"></i><br>เพิ่มรูป';
+
+
+ document.getElementById(
+ "afterBox"
+ ).innerHTML =
+ '<i class="fa fa-camera fa-2x"></i><br>เพิ่มรูป';
+
+
+new bootstrap.Modal(
+ document.getElementById("detailModal")
+).show();
+
+
+}
+
+
+
+
+/*****************************************
+ อ่านรูปเป็น Base64
+******************************************/
+function readImage(input,type){
+
+
+ let file =
+ input.files[0];
+
+
+ if(!file)
+ return;
+
+
+ if(file.size >
+ 10 * 1024 * 1024){
+
+ alert(
+ "รูปต้องไม่เกิน 10 MB"
+ );
+
+ return;
+
+ }
+
+
+ let reader =
+ new FileReader();
+
+
+ reader.onload =
+ function(e){
+
+
+ if(type=="before"){
+
+ beforeImage =
+ e.target.result;
+
+
+ document.getElementById(
+ "beforeBox"
+ ).innerHTML =
+ `<img src="${beforeImage}"
+ class="preview-img">`;
+
+
+ }
+ else{
+
+ afterImage =
+ e.target.result;
+
+
+ document.getElementById(
+ "afterBox"
+ ).innerHTML =
+ `<img src="${afterImage}"
+ class="preview-img">`;
+
+
+ }
+
+
+ };
+
+
+ reader.readAsDataURL(file);
+
+
+}
+
+
+
+
+
+/*****************************************
+ บันทึกรูป
+******************************************/
+function uploadPhoto(){
+
+
+ if(!beforeImage &&
+ !afterImage){
+
+ alert(
+ "กรุณาเลือกรูป"
+ );
+
+ return;
+
+ }
+
+
+ let data =
+ beforeImage +
+ "||" +
+ afterImage;
+
+
+ google.script.run
+
+
+ .withSuccessHandler(
+ function(res){
+
+ alert(
+ res.message
+ );
+
+ bootstrap.Modal
+ .getInstance(
+ document.getElementById(
+ "detailModal"
+ )
+ ).hide();
+
+
+ refreshData();
+
+
+ })
+
+ .withFailureHandler(
+ function(err){
+
+ alert(
+ err.message
+ );
+
+ })
+
+ .savePhoto(
+ currentRow,
+ data
+ );
+
+
+}
+
+
+
+
+
+/*****************************************
+ เปิดหน้าสร้างงาน
+******************************************/
+function openCreateModal(){
+
+ new bootstrap.Modal(
+ document.getElementById(
+ "createModal")
+ ).show();
+
+}
+/*****************************************
+ บันทึกงานใหม่
+******************************************/
+function saveJob(){
+
+ let contractor =
+ document.getElementById(
+ "contractorSelect"
+ ).value;
+
+
+ let type =
+ document.getElementById(
+ "mvType"
+ ).checked
+ ? "MV"
+ : "LV";
+
+
+ let feeder =
+ document.getElementById(
+ "feederInput"
+ ).value;
+
+
+ let job =
+ document.getElementById(
+ "jobInput"
+ ).value.trim();
+
+
+ if(!contractor){
+
+  alert(
+ "กรุณาเลือกผู้รับเหมา"
+ );
+
+ return;
+
+ }
+
+
+ if(!job){
+
+ alert(
+ "กรุณากรอกสถานที่งาน"
+ );
+
+ return;
+
+ }
+
+
+ let data = {
+ contractor: contractor,
+ type: type,
+ feeder: feeder,
+ job: job
+ };
+
+
+ google.script.run
+
+ .withSuccessHandler(function(msg){
+
+
+ alert(msg);
+
+
+ bootstrap.Modal
+ .getInstance(
+ document.getElementById("createModal")
+ ).hide();
+
+
+ document.getElementById(
+ "jobInput"
+ ).value="";
+
+
+ refreshData();
+
+
+ })
+
+
+ .withFailureHandler(function(err){
+
+ alert(
+ err.message
+ );
+
+ })
+
+ .createJob(data);
+
+}
+
+
+
+
+
+/*****************************************
+ เปิดรายงาน
+******************************************/
+function openReportModal(){
+
+ let contractor =
+ document.getElementById(
+ "contractorSelect"
+ ).value;
+
+
+ if(!contractor){
+
+ alert(
+ "กรุณาเลือกผู้รับเหมา"
+ );
+
+ return;
+
+ }
+
+
+ let select =
+ document.getElementById(
+ "reportFeeder"
+ );
+
+
+ select.innerHTML =
+ "<option value='ALL'>ทั้งหมด</option>";
+
+
+ google.script.run
+
+ .withSuccessHandler(function(list){
+
+
+ list.forEach(function(f){
+
+ select.innerHTML +=
+ `<option value="${f}">
+ ${f}
+ </option>`;
+
+ });
+
+
+ })
+
+
+ .getFeederList(contractor);
+
+
+
+ new bootstrap.Modal(
+ document.getElementById(
+ "reportModal"
+ )
+ ).show();
+
+
+}
+
+
+
+
+
+/*****************************************
+ พิมพ์ PDF
+******************************************/
+function printReport(){
+
+
+ let filter = {
+
+
+ contractor:
+ document.getElementById(
+ "contractorSelect"
+ ).value,
+
+
+ feeder:
+ document.getElementById(
+ "reportFeeder"
+ ).value,
+
+
+ keyword:
+ document.getElementById(
+ "reportKeyword"
+ ).value
+
+
+ };
+
+
+
+ google.script.run
+
+
+ .withSuccessHandler(function(data){
+
+
+ let html = "";
+
+
+ data.forEach(function(item){
+
+
+ let before = "";
+ let after = "";
+
+
+ if(item.photo){
+
+ let p =
+ item.photo.split("||");
+
+
+ before = p[0] || "";
+ after = p[1] || "";
+
+ }
+
+
+
+ html += `
+
+
+ <tr>
+
+
+ <td>
+ ${item.type}
+ <br>
+ ${item.feeder}
+ </td>
+
+
+ <td>
+ ${item.job}
+ </td>
+
+
+ <td>
+ <img src="${before}"
+ style="
+ width:120px;
+ height:120px;
+ object-fit:contain;">
+ </td>
+
+
+ <td>
+ <img src="${after}"
+ style="
+ width:120px;
+ height:120px;
+ object-fit:contain;">
+ </td>
+
+
+ </tr>
+
+
+ `;
+
+
+ });
+
+
+ let w =
+ window.open();
+
+
+ w.document.write(`
+
+
+ <html>
+
+
+ <head>
+
+
+ <title>
+ รายงาน
+ </title>
+
+
+ <style>
+
+
+ body{
+ font-family:tahoma;
+ }
+
+
+ table{
+ width:100%;
+ border-collapse:collapse;
+ }
+
+
+ th,td{
+ border:1px solid #000;
+ padding:5px;
+ text-align:center;
+ }
+
+
+ </style>
+
+
+ </head>
+
+
+ <body>
+
+
+ <h2 align="center">
+ รายงานการปฏิบัติงาน
+ </h2>
+
+
+ <table>
+
+
+ <tr>
+
+ <th>
+ ประเภท/Feeder
+ </th>
+
+ <th>
+ สถานที่
+ </th>
+
+ <th>
+ ก่อนตัด
+ </th>
+
+ <th>
+ หลังตัด
+ </th>
+
+
+ </tr>
+
+
+ ${html}
+
+
+ </table>
+
+
+ <br>
+
+
+ <button onclick="window.print()">
+ พิมพ์ PDF
+ </button>
+
+
+ </body>
+
+
+ </html>
+
+
+ `);
+
+
+ w.document.close();
+
+
+ })
+
+ .getReportData(filter);
+
+
+}
+
+</script>
+
+
 </body>
+
+
 </html>
