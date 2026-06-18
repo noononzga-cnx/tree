@@ -1,25 +1,22 @@
 <script>
-  // ลิงก์ Web App ที่คุณได้หลัง Deploy ใหม่
+  // นำ URL เว็บแอปที่คัดลอกมา มาวางตรงนี้ในเครื่องหมายคำพูด
   const API_URL = "https://script.google.com/macros/s/AKfycbxXxD0kHtztBAX9iATzMMsK7g388HI_lBOw-ga5QyRr1GlvOZ1-oB1ka3dDBs1Mem_6/exec"; 
 
-  async function fetchData() {
+  async function loadData() {
     const app = document.getElementById('app');
-    app.innerHTML = '<div class="spinner-border text-primary"></div> กำลังโหลดงานจาก Sheets...';
-    
     try {
-      const res = await fetch(API_URL);
-      const jobs = await res.json();
+      const response = await fetch(API_URL);
+      const jobs = await response.json();
       
-      let html = '<table class="table"><thead><tr><th>ผู้รับเหมา</th><th>งาน</th><th>สถานะ</th></tr></thead><tbody>';
+      let html = '<table class="table table-striped"><thead><tr><th>งาน</th><th>สถานที่</th></tr></thead><tbody>';
       jobs.forEach(job => {
-        html += `<tr><td>${job.contractor}</td><td>${job.job}</td><td>${job.photo ? '✅' : '⏳'}</td></tr>`;
+        html += `<tr><td>${job.type}</td><td>${job.job}</td></tr>`;
       });
       html += '</tbody></table>';
       app.innerHTML = html;
-    } catch (e) {
-      app.innerHTML = '<div class="alert alert-danger">โหลดข้อมูลไม่ได้ ตรวจสอบสิทธิ์การแชร์ Sheets อีกครั้งครับ</div>';
+    } catch (err) {
+      app.innerHTML = '<div class="alert alert-danger">เชื่อมต่อข้อมูลไม่ได้: ' + err.message + '</div>';
     }
   }
-
-  window.onload = fetchData;
+  loadData();
 </script>
