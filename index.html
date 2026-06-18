@@ -1,37 +1,25 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบงานผู้รับเหมา</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        .hero { padding: 40px 0; text-align: center; background: #007bff; color: white; }
-        .card-container { margin-top: -50px; }
-    </style>
-</head>
-<body>
+<script>
+  // ลิงก์ Web App ที่คุณได้หลัง Deploy ใหม่
+  const API_URL = "https://script.google.com/macros/s/AKfycbxXxD0kHtztBAX9iATzMMsK7g388HI_lBOw-ga5QyRr1GlvOZ1-oB1ka3dDBs1Mem_6/exec"; 
 
-    <div class="hero">
-        <h1>ระบบติดตามงานผู้รับเหมา</h1>
-        <p>จัดการงานได้อย่างรวดเร็วผ่าน GitHub Pages</p>
-    </div>
+  async function fetchData() {
+    const app = document.getElementById('app');
+    app.innerHTML = '<div class="spinner-border text-primary"></div> กำลังโหลดงานจาก Sheets...';
+    
+    try {
+      const res = await fetch(API_URL);
+      const jobs = await res.json();
+      
+      let html = '<table class="table"><thead><tr><th>ผู้รับเหมา</th><th>งาน</th><th>สถานะ</th></tr></thead><tbody>';
+      jobs.forEach(job => {
+        html += `<tr><td>${job.contractor}</td><td>${job.job}</td><td>${job.photo ? '✅' : '⏳'}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      app.innerHTML = html;
+    } catch (e) {
+      app.innerHTML = '<div class="alert alert-danger">โหลดข้อมูลไม่ได้ ตรวจสอบสิทธิ์การแชร์ Sheets อีกครั้งครับ</div>';
+    }
+  }
 
-    <div class="container card-container">
-        <div class="card p-4 shadow-sm">
-            <h3>รายการงานล่าสุด</h3>
-            <hr>
-            <div id="app">
-                <p>กำลังโหลดข้อมูล...</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // ใส่ JavaScript ของคุณที่นี่
-        document.getElementById('app').innerHTML = '<div class="alert alert-info">พร้อมใช้งานแล้ว!</div>';
-        console.log("เว็บไซต์โหลดเสร็จสิ้นด้วยความเร็วสูง");
-    </script>
-</body>
-</html>
+  window.onload = fetchData;
+</script>
