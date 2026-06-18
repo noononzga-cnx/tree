@@ -7,15 +7,15 @@
 </head>
 <body class="p-4">
     <h3>รายการงานในระบบ</h3>
-    <div id="app" class="mt-3">กำลังเชื่อมต่อฐานข้อมูล...</div>
+    <div id="app" class="mt-3">กำลังโหลดข้อมูล...</div>
 
     <script>
-        // นำ URL เว็บแอปใหม่ที่ Deploy ล่าสุดมาวางที่นี่
+        // ใส่ URL Web App อันใหม่ที่ได้จากการ Deploy ล่าสุด (ต้องเป็นอันที่เพิ่งกด New Version)
         const API_URL = "https://script.google.com/macros/s/AKfycbx32DWQgjDRuxRyYRYQsAoNQfPW-DQ1yu7LmrcnXrUPtPRC2bvJ3goAP_a27avR8h7Pqw/exec"; 
 
         async function init() {
             try {
-                const response = await fetch(API_URL, { method: 'GET' });
+                const response = await fetch(API_URL);
                 const data = await response.json();
                 
                 let html = '<table class="table table-bordered"><thead><tr><th>ผู้รับเหมา</th><th>งาน</th></tr></thead><tbody>';
